@@ -13,48 +13,11 @@ namespace BankOcr
             _digits = digits;
         }
 
-        public static AccountNumber Parse(string input)
-        {
-            var digits = new Segments[Length];
-            foreach (var position in Enumerable.Range(0, Length))
-            {
-                digits[position] = GetSegmentsForIndex(input, position);
-            }
-            return new AccountNumber(digits);
-        }
-
-        public bool IsValid()
-        {
-            int? checkSum = 0;
-
-            foreach (var position in Enumerable.Range(1, Length))
-            {
-                var index = Length - position;
-                checkSum += position * _digits[index].ToNumber();
-            }
-
-            return checkSum % 11 == 0;
-        }
-
-        private AccountNumber WithDigitAtIndex(Segments digit, int index)
-        {
-            var digitsCopy = _digits.ToArray();
-            digitsCopy[index] = digit;
-            return new AccountNumber(digitsCopy);
-        }
-
-        public IEnumerable<AccountNumber> GetAllValidVariations() =>
-            from index in Enumerable.Range(0, Length)
-            from digitVariation in _digits[index].GetAllOneOffs()
-            let variation = this.WithDigitAtIndex(digitVariation, index)
-            where variation.IsValid()
-            select variation;
-
-        public override string ToString() => new string(_digits.Select(d =>
-        {
-            var num = d.ToNumber();
-            return num != null ? (char)('0' + num.Value) : '?';
-        }).ToArray());
+        public static AccountNumber Parse(string input) =>
+            new AccountNumber(
+                Enumerable.Range(0, Length).
+                Select(position => GetSegmentsForIndex(input, position)).
+                ToArray());
 
         private static Segments GetSegmentsForIndex(string input, int index)
         {
@@ -97,5 +60,38 @@ namespace BankOcr
 
             return s;
         }
+
+        public bool IsValid()
+        {
+            int? checkSum = 0;
+
+            foreach (var position in Enumerable.Range(1, Length))
+            {
+                var index = Length - position;
+                checkSum += position * _digits[index].ToNumber();
+            }
+
+            return checkSum % 11 == 0;
+        }
+
+        private AccountNumber WithDigitAtIndex(Segments digit, int index)
+        {
+            var digitsCopy = _digits.ToArray();
+            digitsCopy[index] = digit;
+            return new AccountNumber(digitsCopy);
+        }
+
+        public IEnumerable<AccountNumber> GetAllValidVariations() =>
+            from index in Enumerable.Range(0, Length).AsParallel()
+            from digitVariation in _digits[index].GetAllOneOffs()
+            let variation = this.WithDigitAtIndex(digitVariation, index)
+            where variation.IsValid()
+            select variation;
+
+        public override string ToString() => new string(_digits.Select(d =>
+        {
+            var num = d.ToNumber();
+            return num != null ? (char)('0' + num.Value) : '?';
+        }).ToArray());
     }
 }
