@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using System.Text;
 
 namespace BankOcr
 {
-    public static class Parser
+    public static class AccountNumberParser
     {
         private static readonly DigitSegmentLookup TopRowOptions = new DigitSegmentLookup
         {
@@ -29,7 +28,7 @@ namespace BankOcr
             {" _|", Digits.D3|Digits.D5|Digits.D9},
         };
 
-        public static AccountNumber Parse(string input)
+        public static string Parse(string input)
         {
             var lines = new[]
             {
@@ -55,7 +54,27 @@ namespace BankOcr
                 }
             }
 
-            return new AccountNumber(digitOptions);
+            return DetermineAccountNumber(digitOptions);
         }
+
+        private static string DetermineAccountNumber(Digits[,] digitOptions)
+        {
+            bool illformed = false;
+
+            var sb = new StringBuilder(9);
+            foreach (int position in Enumerable.Range(0, 9))
+            {
+                var digit = digitOptions[0, position] & digitOptions[1, position] & digitOptions[2, position];
+
+                illformed |= digit == Digits.Unknown;
+                sb.Append(digit.ToChar());
+            }
+
+            return sb.ToString() + (illformed ? " ILL" : string.Empty);
+        }
+
+
+        public static bool IsValid(int accountNumber) => IsValid(accountNumber.ToString("D9"));
+        public static bool IsValid(string accountNumber) => Enumerable.Range(1, 9).Select(d => d * (accountNumber[9 - d] - '0')).Sum() % 11 == 0;
     }
 }

@@ -73,9 +73,7 @@ namespace Tests
         )]
         public void ShouldParseNormalNumbers(string input, int result)
         {
-            var accountNumber = Parser.Parse(input);
-
-            Assert.That(accountNumber.ToString(), Is.EqualTo(result.ToString("D9")));
+            Assert.That(AccountNumberParser.Parse(input), Is.EqualTo(result.ToString("D9")));
         }
 
         [TestCase(711111111,true)]
@@ -88,7 +86,7 @@ namespace Tests
         [TestCase(664371495,false)]
         public void ShouldDetermineIfValid(int accountNumber, bool expectedValidity)
         {
-            Assert.That(new AccountNumber(accountNumber).IsValid, Is.EqualTo(expectedValidity));
+            Assert.That(AccountNumberParser.IsValid(accountNumber), Is.EqualTo(expectedValidity));
         }
 
         [TestCase(
@@ -101,19 +99,17 @@ namespace Tests
             "    _  _  _  _  _  _     _ "+
             "|_||_|| || ||_   |  |  | _ "+
             "  | _||_||_||_|  |  |  | _|",
-            "49006771?"
+            "49006771? ILL"
         )]
         [TestCase(
             "    _  _     _  _  _  _  _ "+
             "  | _| _||_| _ |_   ||_||_|"+
             "  ||_  _|  | _||_|  ||_| _ ",
-            "1234?678?"
+            "1234?678? ILL"
         )]
         public void ShouldHandleIllformedNumbers(string input, string result)
         {
-            var accountNumber = Parser.Parse(input);
-
-            Assert.That(accountNumber.ToString(), Is.EqualTo(result));
+            Assert.That(AccountNumberParser.Parse(input), Is.EqualTo(result));
         }
 
 
