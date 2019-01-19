@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace BankOcr
@@ -30,23 +32,97 @@ namespace BankOcr
             D9 = TopBar | MiddleLeftPipe | MiddleBar | MiddleRightPipe | BottomBar | BottomRightPipe,
         }
 
-        private static char SegmentsToChar(Segments s)
+        private static IEnumerable<Segments> AllOneOffs(Segments input)
+        {
+            var allSegments = new[]
+            {
+                Segments.TopBar,
+                Segments.MiddleLeftPipe,
+                Segments.MiddleBar,
+                Segments.MiddleRightPipe,
+                Segments.BottomLeftPipe,
+                Segments.BottomBar,
+                Segments.BottomRightPipe
+            };
+
+            foreach (var segmentToFlip in allSegments)
+            {
+                yield return input ^ segmentToFlip;
+            }
+        }
+
+        private static int? SegmentsToNum(Segments s)
         {
             switch (s)
             {
-                case Segments.D0: return '0';
-                case Segments.D1: return '1';
-                case Segments.D2: return '2';
-                case Segments.D3: return '3';
-                case Segments.D4: return '4';
-                case Segments.D5: return '5';
-                case Segments.D6: return '6';
-                case Segments.D7: return '7';
-                case Segments.D8: return '8';
-                case Segments.D9: return '9';
-                default: return '?';
+                case Segments.D0: return 0;
+                case Segments.D1: return 1;
+                case Segments.D2: return 2;
+                case Segments.D3: return 3;
+                case Segments.D4: return 4;
+                case Segments.D5: return 5;
+                case Segments.D6: return 6;
+                case Segments.D7: return 7;
+                case Segments.D8: return 8;
+                case Segments.D9: return 9;
+                default: return null;
+            }
+        }
+
+        private sealed class AccountNumber
+        {
+            private readonly Segments[] _digits;
+
+            public AccountNumber()
+            {
+                _digits = new Segments[9];
             }
 
+            public AccountNumber(Segments[] digits)
+            {
+                _digits = digits;
+            }
+
+            public Segments this[int index]
+            {
+                get => _digits[index];
+                set => _digits[index] = value;
+            }
+
+            public bool IsValid()
+            {
+                int? checkSum = 0;
+
+                foreach (var position in Enumerable.Range(1, 9))
+                {
+                    var index = 9 - position;
+                    checkSum += position * SegmentsToNum(_digits[index]);
+                }
+
+                return checkSum % 11 == 0;
+            }
+
+            public IEnumerable<AccountNumber> GetAllValidVariations()
+            {
+                foreach (var index in Enumerable.Range(0, 9))
+                {
+                    foreach (var digitVariation in AllOneOffs(_digits[index]))
+                    {
+                        var variation = new AccountNumber(_digits.ToArray());
+                        variation._digits[index] = digitVariation;
+                        if (variation.IsValid())
+                        {
+                            yield return variation;
+                        }
+                    }
+                }
+            }
+
+            public override string ToString() => new string(_digits.Select(d =>
+                {
+                    var num = SegmentsToNum(d);
+                    return num != null ? (char)('0' + num.Value) : '?';
+                }).ToArray());
         }
 
         private static Segments GetSegmentsForPosition(string input, int position)
@@ -93,31 +169,51 @@ namespace BankOcr
 
         public static string Parse(string input)
         {
-            bool malformed = false;
-            var result = new StringBuilder(9);
+            var originalAccountNum = new AccountNumber();
 
             foreach (var position in Enumerable.Range(0, 9))
             {
-                var segments = GetSegmentsForPosition(input, position);
-
-                var c = SegmentsToChar(segments);
-                malformed |= c == '?';
-                result.Append(c);
+                originalAccountNum[position] = GetSegmentsForPosition(input, position);
             }
 
-            if (malformed)
+            var result = new StringBuilder();
+
+            if (originalAccountNum.IsValid())
             {
-                result.Append(" ILL");
+                result.Append(originalAccountNum);
             }
-            else if (!IsValid(result.ToString()))
+            else
             {
-                result.Append(" ERR");
+                var allValidVariations = originalAccountNum.GetAllValidVariations().ToArray();
+
+                if (allValidVariations.Length == 0)
+                {
+                    var str = originalAccountNum.ToString();
+                    result.Append(str);
+
+                    if (str.Contains('?'))
+                    {
+                        result.Append(" ILL");
+                    }
+                    else
+                    {
+                        result.Append(" ERR");
+                    }
+                }
+                else if (allValidVariations.Length == 1)
+                {
+                    result.Append(allValidVariations.First());
+                }
+                else
+                {
+                    result.Append(originalAccountNum);
+                    result.Append(" AMB [");
+                    result.Append(string.Join(", ", allValidVariations.OrderBy(ac => ac.ToString()).Select(ac => $"'{ac}'")));
+                    result.Append("]");
+                }
             }
 
             return result.ToString();
         }
-
-        public static bool IsValid(int accountNumber) => IsValid(accountNumber.ToString("D9"));
-        public static bool IsValid(string accountNumber) => Enumerable.Range(1, 9).Select(d => d * (accountNumber[9 - d] - '0')).Sum() % 11 == 0;
     }
 }
