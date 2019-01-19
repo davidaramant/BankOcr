@@ -21,11 +21,14 @@ namespace BankOcr
 
                 switch (allValidVariations.Length)
                 {
-                    case 0:
-                        var str = originalAccountNum.ToString();
-                        result.Append(str);
+                    case 0 when originalAccountNum.ToString().Contains('?'):
+                        result.Append(originalAccountNum);
+                        result.Append(" ILL");
+                        break;
 
-                        result.Append(str.Contains('?') ? " ILL" : " ERR");
+                    case 0:
+                        result.Append(originalAccountNum);
+                        result.Append(" ERR");
                         break;
                     
                     case 1:

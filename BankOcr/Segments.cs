@@ -33,13 +33,13 @@ namespace BankOcr
         {
             var allSegments = new[]
             {
-                    Segments.TopBar,
-                    Segments.MiddleLeftPipe,
-                    Segments.MiddleBar,
-                    Segments.MiddleRightPipe,
-                    Segments.BottomLeftPipe,
-                    Segments.BottomBar,
-                    Segments.BottomRightPipe
+                Segments.TopBar,
+                Segments.MiddleLeftPipe,
+                Segments.MiddleBar,
+                Segments.MiddleRightPipe,
+                Segments.BottomLeftPipe,
+                Segments.BottomBar,
+                Segments.BottomRightPipe
             };
 
             foreach (var segmentToFlip in allSegments)
