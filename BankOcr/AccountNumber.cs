@@ -36,21 +36,19 @@ namespace BankOcr
             return checkSum % 11 == 0;
         }
 
-        public IEnumerable<AccountNumber> GetAllValidVariations()
+        private AccountNumber WithDigitAtIndex(Segments digit, int index)
         {
-            foreach (var index in Enumerable.Range(0, Length))
-            {
-                foreach (var digitVariation in _digits[index].GetAllOneOffs())
-                {
-                    var variation = new AccountNumber(_digits.ToArray());
-                    variation._digits[index] = digitVariation;
-                    if (variation.IsValid())
-                    {
-                        yield return variation;
-                    }
-                }
-            }
+            var digitsCopy = _digits.ToArray();
+            digitsCopy[index] = digit;
+            return new AccountNumber(digitsCopy);
         }
+
+        public IEnumerable<AccountNumber> GetAllValidVariations() =>
+            from index in Enumerable.Range(0, Length)
+            from digitVariation in _digits[index].GetAllOneOffs()
+            let variation = this.WithDigitAtIndex(digitVariation, index)
+            where variation.IsValid()
+            select variation;
 
         public override string ToString() => new string(_digits.Select(d =>
         {
