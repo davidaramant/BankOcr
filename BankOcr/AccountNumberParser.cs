@@ -1,85 +1,120 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace BankOcr
 {
     public static class AccountNumberParser
     {
-        private static readonly DigitSegmentLookup TopRowOptions = new DigitSegmentLookup
+        [Flags]
+        private enum Segments : byte
         {
-            {"   ", Digits.D1 | Digits.D4},
-            {" _ ", Digits.D0 | Digits.D2 | Digits.D3 | Digits.D5 | Digits.D6 | Digits.D7 | Digits.D8 | Digits.D9 },
-        };
+            None = 0,
+            TopBar = 1 << 0,
+            MiddleLeftPipe = 1 << 1,
+            MiddleBar = 1 << 2,
+            MiddleRightPipe = 1 << 3,
+            BottomLeftPipe = 1 << 4,
+            BottomBar = 1 << 5,
+            BottomRightPipe = 1 << 6,
 
-        private static readonly DigitSegmentLookup MiddleRowOptions = new DigitSegmentLookup
-        {
-            {"| |", Digits.D0},
-            {"  |", Digits.D1|Digits.D7},
-            {" _|", Digits.D2|Digits.D3},
-            {"|_|", Digits.D4|Digits.D8|Digits.D9},
-            {"|_ ", Digits.D5|Digits.D6},
-        };
+            D0 = TopBar | MiddleLeftPipe | MiddleRightPipe | BottomLeftPipe | BottomBar | BottomRightPipe,
+            D1 = MiddleRightPipe | BottomRightPipe,
+            D2 = TopBar | MiddleBar | MiddleRightPipe | BottomLeftPipe | BottomBar,
+            D3 = TopBar | MiddleBar | MiddleRightPipe | BottomBar | BottomRightPipe,
+            D4 = MiddleLeftPipe | MiddleBar | MiddleRightPipe | BottomRightPipe,
+            D5 = TopBar | MiddleLeftPipe | MiddleBar | BottomBar | BottomRightPipe,
+            D6 = TopBar | MiddleLeftPipe | MiddleBar | BottomLeftPipe | BottomBar | BottomRightPipe,
+            D7 = TopBar | MiddleRightPipe | BottomRightPipe,
+            D8 = TopBar | MiddleLeftPipe | MiddleBar | MiddleRightPipe | BottomLeftPipe | BottomBar | BottomRightPipe,
+            D9 = TopBar | MiddleLeftPipe | MiddleBar | MiddleRightPipe | BottomBar | BottomRightPipe,
+        }
 
-        private static readonly DigitSegmentLookup BottomRowOptions = new DigitSegmentLookup
+        private static char SegmentsToChar(Segments s)
         {
-            {"|_|", Digits.D0|Digits.D6|Digits.D8},
-            {"  |", Digits.D1|Digits.D4|Digits.D7},
-            {"|_ ", Digits.D2},
-            {" _|", Digits.D3|Digits.D5|Digits.D9},
-        };
+            switch (s)
+            {
+                case Segments.D0: return '0';
+                case Segments.D1: return '1';
+                case Segments.D2: return '2';
+                case Segments.D3: return '3';
+                case Segments.D4: return '4';
+                case Segments.D5: return '5';
+                case Segments.D6: return '6';
+                case Segments.D7: return '7';
+                case Segments.D8: return '8';
+                case Segments.D9: return '9';
+                default: return '?';
+            }
+
+        }
+
+        private static Segments GetSegmentsForPosition(string input, int position)
+        {
+            Segments s = Segments.None;
+
+            var posOffset = position * 3;
+            var middleOffset = 3 * 9;
+            var bottomOffset = 2 * middleOffset;
+
+            if (input[posOffset + 1] == '_')
+            {
+                s |= Segments.TopBar;
+            }
+
+            if (input[posOffset + middleOffset] == '|')
+            {
+                s |= Segments.MiddleLeftPipe;
+            }
+            if (input[posOffset + middleOffset + 1] == '_')
+            {
+                s |= Segments.MiddleBar;
+            }
+            if (input[posOffset + middleOffset + 2] == '|')
+            {
+                s |= Segments.MiddleRightPipe;
+            }
+
+            if (input[posOffset + bottomOffset] == '|')
+            {
+                s |= Segments.BottomLeftPipe;
+            }
+            if (input[posOffset + bottomOffset + 1] == '_')
+            {
+                s |= Segments.BottomBar;
+            }
+            if (input[posOffset + bottomOffset + 2] == '|')
+            {
+                s |= Segments.BottomRightPipe;
+            }
+
+            return s;
+        }
 
         public static string Parse(string input)
         {
-            var lines = new[]
-            {
-                input.Substring(0,27),
-                input.Substring(27,27),
-                input.Substring(27+27,27),
-            };
-
-            var digitSectionLookups = new[]
-            {
-                TopRowOptions,
-                MiddleRowOptions,
-                BottomRowOptions
-            };
-
-            var digitOptions = new Digits[3, 9];
-
-            foreach (int position in Enumerable.Range(0, 9))
-            {
-                foreach (int line in Enumerable.Range(0, 3))
-                {
-                    digitOptions[line, position] = digitSectionLookups[line][lines[line].Substring(position * 3, 3)];
-                }
-            }
-
-            return DetermineAccountNumber(digitOptions);
-        }
-
-        private static string DetermineAccountNumber(Digits[,] digitOptions)
-        {
             bool malformed = false;
+            var result = new StringBuilder(9);
 
-            var sb = new StringBuilder(9);
-            foreach (int position in Enumerable.Range(0, 9))
+            foreach (var position in Enumerable.Range(0, 9))
             {
-                var digit = digitOptions[0, position] & digitOptions[1, position] & digitOptions[2, position];
+                var segments = GetSegmentsForPosition(input, position);
 
-                malformed |= digit == Digits.Unknown;
-                sb.Append(digit.ToChar());
+                var c = SegmentsToChar(segments);
+                malformed |= c == '?';
+                result.Append(c);
             }
 
             if (malformed)
             {
-                sb.Append(" ILL");
+                result.Append(" ILL");
             }
-            else if (!IsValid(sb.ToString()))
+            else if (!IsValid(result.ToString()))
             {
-                sb.Append(" ERR");
+                result.Append(" ERR");
             }
 
-            return sb.ToString();
+            return result.ToString();
         }
 
         public static bool IsValid(int accountNumber) => IsValid(accountNumber.ToString("D9"));
