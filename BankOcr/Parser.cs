@@ -6,13 +6,13 @@ namespace BankOcr
 {
     public static class Parser
     {
-        private static readonly Dictionary<string, Digits> TopRowOptions = new Dictionary<string, Digits>
+        private static readonly DigitSegmentLookup TopRowOptions = new DigitSegmentLookup
         {
             {"   ", Digits.D1 | Digits.D4},
             {" _ ", Digits.D0 | Digits.D2 | Digits.D3 | Digits.D5 | Digits.D6 | Digits.D7 | Digits.D8 | Digits.D9 },
         };
 
-        private static readonly Dictionary<string, Digits> MiddleRowOptions = new Dictionary<string, Digits>
+        private static readonly DigitSegmentLookup MiddleRowOptions = new DigitSegmentLookup
         {
             {"| |", Digits.D0},
             {"  |", Digits.D1|Digits.D7},
@@ -21,7 +21,7 @@ namespace BankOcr
             {"|_ ", Digits.D5|Digits.D6},
         };
 
-        private static readonly Dictionary<string, Digits> BottomRowOptions = new Dictionary<string, Digits>
+        private static readonly DigitSegmentLookup BottomRowOptions = new DigitSegmentLookup
         {
             {"|_|", Digits.D0|Digits.D6|Digits.D8},
             {"  |", Digits.D1|Digits.D4|Digits.D7},

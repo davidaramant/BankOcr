@@ -73,26 +73,50 @@ namespace Tests
         )]
         public void ShouldParseNormalNumbers(string input, int result)
         {
-            Assert.That(Parser.Parse(input).ToString(), Is.EqualTo(result.ToString("D9")));
+            var accountNumber = Parser.Parse(input);
+
+            Assert.That(accountNumber.ToString(), Is.EqualTo(result.ToString("D9")));
+        }
+
+        [TestCase(711111111,true)]
+        [TestCase(777777177,true)]
+        [TestCase(200800000,true)]
+        [TestCase(333393333,true)]
+        [TestCase(000000001,false)]
+        [TestCase(111111111,false)]
+        [TestCase(457508000,true)]
+        [TestCase(664371495,false)]
+        public void ShouldDetermineIfValid(int accountNumber, bool expectedValidity)
+        {
+            Assert.That(new AccountNumber(accountNumber).IsValid, Is.EqualTo(expectedValidity));
+        }
+
+        [TestCase(
+            " _  _  _  _  _  _  _  _    "+
+            "| || || || || || || ||_   |"+
+            "|_||_||_||_||_||_||_| _|  |",
+            "000000051"
+        )]
+        [TestCase(
+            "    _  _  _  _  _  _     _ "+
+            "|_||_|| || ||_   |  |  | _ "+
+            "  | _||_||_||_|  |  |  | _|",
+            "49006771?"
+        )]
+        [TestCase(
+            "    _  _     _  _  _  _  _ "+
+            "  | _| _||_| _ |_   ||_||_|"+
+            "  ||_  _|  | _||_|  ||_| _ ",
+            "1234?678?"
+        )]
+        public void ShouldHandleIllformedNumbers(string input, string result)
+        {
+            var accountNumber = Parser.Parse(input);
+
+            Assert.That(accountNumber.ToString(), Is.EqualTo(result));
         }
 
 
-        //use case 3
-        // _  _  _  _  _  _  _  _    
-        //| || || || || || || ||_   |
-        //|_||_||_||_||_||_||_| _|  |
-
-        //=> 000000051
-        //    _  _  _  _  _  _     _ 
-        //|_||_|| || ||_   |  |  | _ 
-        //  | _||_||_||_|  |  |  | _|
-
-        //=> 49006771? ILL
-        //    _  _     _  _  _  _  _ 
-        //  | _| _||_| _ |_   ||_||_|
-        //  ||_  _|  | _||_|  ||_| _ 
-
-        //=> 1234?678? ILL
 
         //use case 4
 
