@@ -62,7 +62,7 @@ namespace Tests
             123456789)]
         public void ShouldParseNormalNumbers(string input, int result)
         {
-            Assert.That(AccountNumberParser.Parse(input), Is.EqualTo(result.ToString("D9")));
+            Assert.That(AccountNumberParser.Parse(input).Substring(0, 9), Is.EqualTo(result.ToString("D9")));
         }
 
         [TestCase(711111111, true)]
@@ -93,6 +93,11 @@ namespace Tests
             "  | _| _||_| _ |_   ||_||_|" +
             "  ||_  _|  | _||_|  ||_| _ ",
             "1234?678? ILL")]
+        [TestCase(
+            " _  _     _  _        _  _ " +
+            "|_ |_ |_| _|  |  ||_||_||_ " +
+            "|_||_|  | _|  |  |  | _| _|",
+            "664371495 ERR")]
         public void ShouldHandleIllformedNumbers(string input, string result)
         {
             Assert.That(AccountNumberParser.Parse(input), Is.EqualTo(result));
@@ -104,9 +109,9 @@ namespace Tests
             "  |  |  |  |  |  |  |  |  |",
             "711111111")]
         [TestCase(
-            "_  _  _  _  _  _  _  _  _ " +
-            " |  |  |  |  |  |  |  |  |" +
-            " |  |  |  |  |  |  |  |  |",
+            " _  _  _  _  _  _  _  _  _ " +
+            "  |  |  |  |  |  |  |  |  |" +
+            "  |  |  |  |  |  |  |  |  |",
             "777777177")]
         [TestCase(
             " _  _  _  _  _  _  _  _  _ " +
