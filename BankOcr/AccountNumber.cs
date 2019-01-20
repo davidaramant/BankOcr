@@ -69,8 +69,8 @@ namespace BankOcr
             Aggregate((int?)0,
                 (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
 
-        AccountNumber WithDigitAtIndex(Segments digit, int index)
-            => new AccountNumber(_digits.SetItem(index, digit));
+        AccountNumber WithDigitAtIndex(Segments digit, int index) =>
+            new AccountNumber(_digits.SetItem(index, digit));
 
         IEnumerable<AccountNumber> GetAllValidVariations() =>
             from index in Enumerable.Range(0, Length)
