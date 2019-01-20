@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BankOcr
 {
@@ -29,24 +30,9 @@ namespace BankOcr
 
     public static class SegmentsExtensions
     {
-        public static IEnumerable<Segments> GetAllOneOffs(this Segments input)
-        {
-            var allSegments = new[]
-            {
-                Segments.TopBar,
-                Segments.MiddleLeftPipe,
-                Segments.MiddleBar,
-                Segments.MiddleRightPipe,
-                Segments.BottomLeftPipe,
-                Segments.BottomBar,
-                Segments.BottomRightPipe
-            };
-
-            foreach (var segmentToFlip in allSegments)
-            {
-                yield return input ^ segmentToFlip;
-            }
-        }
+        public static IEnumerable<Segments> GetAllOneOffs(this Segments input) =>
+            from bit in Enumerable.Range(0, 7)
+            select input ^ (Segments)(1 << bit);
 
         public static int? ToNumber(this Segments s)
         {
