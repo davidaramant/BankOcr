@@ -62,18 +62,9 @@ namespace BankOcr
             return s;
         }
 
-        public bool IsValid()
-        {
-            int? checkSum = 0;
-
-            foreach (var position in Enumerable.Range(1, Length))
-            {
-                var index = Length - position;
-                checkSum += position * _digits[index].ToNumber();
-            }
-
-            return checkSum % 11 == 0;
-        }
+        public bool IsValid() =>
+            Enumerable.Range(1, Length).
+            Aggregate((int?) 0, (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
 
         private AccountNumber WithDigitAtIndex(Segments digit, int index)
             => new AccountNumber(_digits.SetItem(index, digit));
