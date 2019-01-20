@@ -19,36 +19,27 @@ namespace BankOcr
 
         private static Segments GetSegmentsForPosition(string input, int position)
         {
-            var s = Segments.None;
-
             var positionOffset = position * 3;
             var middleOffset = 3 * Length;
             var bottomOffset = 2 * middleOffset;
 
-            void SetFlag(Segments flag, int index)
-            {
-                if (input[index] != ' ')
-                {
-                    s |= flag;
-                }
-            }
+            Segments GetFlag(Segments flag, int index) =>
+                input[index] == ' ' ? Segments.None : flag;
 
-            SetFlag(Segments.TopBar, positionOffset + 1);
-
-            SetFlag(Segments.MiddleLeftPipe, positionOffset + middleOffset);
-            SetFlag(Segments.MiddleBar, positionOffset + middleOffset + 1);
-            SetFlag(Segments.MiddleRightPipe, positionOffset + middleOffset + 2);
-
-            SetFlag(Segments.BottomLeftPipe, positionOffset + bottomOffset);
-            SetFlag(Segments.BottomBar, positionOffset + bottomOffset + 1);
-            SetFlag(Segments.BottomRightPipe, positionOffset + bottomOffset + 2);
-
-            return s;
+            return
+                GetFlag(Segments.TopBar, positionOffset + 1) |
+                GetFlag(Segments.MiddleLeftPipe, positionOffset + middleOffset) |
+                GetFlag(Segments.MiddleBar, positionOffset + middleOffset + 1) |
+                GetFlag(Segments.MiddleRightPipe, positionOffset + middleOffset + 2) |
+                GetFlag(Segments.BottomLeftPipe, positionOffset + bottomOffset) |
+                GetFlag(Segments.BottomBar, positionOffset + bottomOffset + 1) |
+                GetFlag(Segments.BottomRightPipe, positionOffset + bottomOffset + 2);
         }
 
         public bool IsValid() =>
             Enumerable.Range(1, Length).
-            Aggregate((int?)0, (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
+            Aggregate((int?)0, 
+                (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
 
         private AccountNumber WithDigitAtIndex(Segments digit, int index)
             => new AccountNumber(_digits.SetItem(index, digit));
