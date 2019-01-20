@@ -73,7 +73,7 @@ namespace BankOcr
             => new AccountNumber(_digits.SetItem(index, digit));
 
         IEnumerable<AccountNumber> GetAllValidVariations() =>
-            from index in Enumerable.Range(0, Length).AsParallel()
+            from index in Enumerable.Range(0, Length)
             from digitVariation in _digits[index].GetAllOneOffs()
             let accountVariation = this.WithDigitAtIndex(digitVariation, index)
             where accountVariation.IsValid()
