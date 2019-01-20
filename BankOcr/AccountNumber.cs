@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace BankOcr
@@ -6,9 +7,9 @@ namespace BankOcr
     public sealed class AccountNumber
     {
         private const int Length = 9;
-        private readonly Segments[] _digits;
+        private readonly ImmutableArray<Segments> _digits;
 
-        private AccountNumber(Segments[] digits)
+        private AccountNumber(ImmutableArray<Segments> digits)
         {
             _digits = digits;
         }
@@ -17,7 +18,7 @@ namespace BankOcr
             new AccountNumber(
                 Enumerable.Range(0, Length).
                 Select(position => GetSegmentsForIndex(input, position)).
-                ToArray());
+                ToImmutableArray());
 
         private static Segments GetSegmentsForIndex(string input, int index)
         {
@@ -75,11 +76,7 @@ namespace BankOcr
         }
 
         private AccountNumber WithDigitAtIndex(Segments digit, int index)
-        {
-            var digitsCopy = _digits.ToArray();
-            digitsCopy[index] = digit;
-            return new AccountNumber(digitsCopy);
-        }
+            => new AccountNumber(_digits.SetItem(index, digit));
 
         public IEnumerable<AccountNumber> GetAllValidVariations() =>
             from index in Enumerable.Range(0, Length).AsParallel()
