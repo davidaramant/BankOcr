@@ -81,6 +81,6 @@ namespace BankOcr
             select accountVariation;
 
         public override string ToString() =>
-            new string(_digits.Select(d => (char?)(d.ToNumber() + '0') ?? '?').ToArray());
+            new string(_digits.Select(d => d.ToChar()).ToArray());
     }
 }

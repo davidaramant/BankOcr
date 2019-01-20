@@ -48,6 +48,8 @@ namespace BankOcr
             }
         }
 
+        public static char ToChar(this Segments s) => (char?)(s.ToNumber() + '0') ?? '?';
+
         public static IEnumerable<Segments> GetAllOneOffs(this Segments input) =>
             from bit in Enumerable.Range(0, 7)
             select input ^ (Segments)(1 << bit);
