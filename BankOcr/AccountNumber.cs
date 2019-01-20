@@ -88,10 +88,7 @@ namespace BankOcr
             where variation.IsValid()
             select variation;
 
-        public override string ToString() => new string(_digits.Select(d =>
-        {
-            var num = d.ToNumber();
-            return num != null ? (char)('0' + num.Value) : '?';
-        }).ToArray());
+        public override string ToString() =>
+            new string(_digits.Select(d => (char?)(d.ToNumber() + '0') ?? '?').ToArray());
     }
 }
