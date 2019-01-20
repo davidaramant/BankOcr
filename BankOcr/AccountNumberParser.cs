@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Text;
 
 namespace BankOcr
 {
@@ -7,44 +6,30 @@ namespace BankOcr
     {
         public static string Parse(string input)
         {
-            var originalAccountNum = AccountNumber.Parse(input);
+            var accountNum = AccountNumber.Parse(input);
 
-            var result = new StringBuilder();
-
-            if (originalAccountNum.IsValid())
+            if (accountNum.IsValid())
             {
-                result.Append(originalAccountNum);
-            }
-            else
-            {
-                var allValidVariations = originalAccountNum.GetAllValidVariations().ToArray();
-
-                switch (allValidVariations.Length)
-                {
-                    case 0 when originalAccountNum.ToString().Contains('?'):
-                        result.Append(originalAccountNum);
-                        result.Append(" ILL");
-                        break;
-
-                    case 0:
-                        result.Append(originalAccountNum);
-                        result.Append(" ERR");
-                        break;
-                    
-                    case 1:
-                        result.Append(allValidVariations.First());
-                        break;
-
-                    default:
-                        result.Append(originalAccountNum);
-                        result.Append(" AMB [");
-                        result.Append(string.Join(", ", allValidVariations.OrderBy(ac => ac.ToString()).Select(ac => $"'{ac}'")));
-                        result.Append("]");
-                        break;
-                }
+                return accountNum.ToString();
             }
 
-            return result.ToString();
+            var allValidVariations = accountNum.GetAllValidVariations().ToArray();
+
+            switch (allValidVariations.Length)
+            {
+                case 0 when accountNum.ToString().Contains('?'):
+                    return $"{accountNum} ILL";
+
+                case 0:
+                    return $"{accountNum} ERR";
+
+                case 1:
+                    return allValidVariations.First().ToString();
+
+                default:
+                    var variations = string.Join(", ", allValidVariations.Select(ac => $"'{ac}'"));
+                    return $"{accountNum} AMB [{variations}]";
+            }
         }
     }
 }

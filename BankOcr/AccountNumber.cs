@@ -49,6 +49,7 @@ namespace BankOcr
             from digitVariation in _digits[index].GetAllOneOffs()
             let variation = this.WithDigitAtIndex(digitVariation, index)
             where variation.IsValid()
+            orderby variation.ToString() 
             select variation;
 
         public override string ToString() =>
