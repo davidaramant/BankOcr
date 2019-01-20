@@ -6,9 +6,9 @@ namespace BankOcr
 {
     public sealed class AccountNumber
     {
-        public static string Parse(string input)
+        public static string Process(string input)
         {
-            var accountNum = FromString(input);
+            var accountNum = Parse(input);
 
             if (accountNum.IsValid())
             {
@@ -39,7 +39,7 @@ namespace BankOcr
 
         AccountNumber(ImmutableArray<Segments> digits) { _digits = digits; }
 
-        static AccountNumber FromString(string input) =>
+        static AccountNumber Parse(string input) =>
             new AccountNumber(
                 Enumerable.Range(0, Length).
                 Select(position => GetSegmentsForPosition(input, position)).
