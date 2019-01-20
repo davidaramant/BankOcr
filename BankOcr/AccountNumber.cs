@@ -9,62 +9,46 @@ namespace BankOcr
         private const int Length = 9;
         private readonly ImmutableArray<Segments> _digits;
 
-        private AccountNumber(ImmutableArray<Segments> digits)
-        {
-            _digits = digits;
-        }
+        private AccountNumber(ImmutableArray<Segments> digits) { _digits = digits; }
 
         public static AccountNumber Parse(string input) =>
             new AccountNumber(
                 Enumerable.Range(0, Length).
-                Select(position => GetSegmentsForIndex(input, position)).
+                Select(position => GetSegmentsForPosition(input, position)).
                 ToImmutableArray());
 
-        private static Segments GetSegmentsForIndex(string input, int index)
+        private static Segments GetSegmentsForPosition(string input, int position)
         {
-            Segments s = Segments.None;
+            var s = Segments.None;
 
-            var indexOffset = index * 3;
+            var positionOffset = position * 3;
             var middleOffset = 3 * Length;
             var bottomOffset = 2 * middleOffset;
 
-            if (input[indexOffset + 1] == '_')
+            void SetFlag(Segments flag, int index)
             {
-                s |= Segments.TopBar;
+                if (input[index] != ' ')
+                {
+                    s |= flag;
+                }
             }
 
-            if (input[indexOffset + middleOffset] == '|')
-            {
-                s |= Segments.MiddleLeftPipe;
-            }
-            if (input[indexOffset + middleOffset + 1] == '_')
-            {
-                s |= Segments.MiddleBar;
-            }
-            if (input[indexOffset + middleOffset + 2] == '|')
-            {
-                s |= Segments.MiddleRightPipe;
-            }
+            SetFlag(Segments.TopBar, positionOffset + 1);
 
-            if (input[indexOffset + bottomOffset] == '|')
-            {
-                s |= Segments.BottomLeftPipe;
-            }
-            if (input[indexOffset + bottomOffset + 1] == '_')
-            {
-                s |= Segments.BottomBar;
-            }
-            if (input[indexOffset + bottomOffset + 2] == '|')
-            {
-                s |= Segments.BottomRightPipe;
-            }
+            SetFlag(Segments.MiddleLeftPipe, positionOffset + middleOffset);
+            SetFlag(Segments.MiddleBar, positionOffset + middleOffset + 1);
+            SetFlag(Segments.MiddleRightPipe, positionOffset + middleOffset + 2);
+
+            SetFlag(Segments.BottomLeftPipe, positionOffset + bottomOffset);
+            SetFlag(Segments.BottomBar, positionOffset + bottomOffset + 1);
+            SetFlag(Segments.BottomRightPipe, positionOffset + bottomOffset + 2);
 
             return s;
         }
 
         public bool IsValid() =>
             Enumerable.Range(1, Length).
-            Aggregate((int?) 0, (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
+            Aggregate((int?)0, (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
 
         private AccountNumber WithDigitAtIndex(Segments digit, int index)
             => new AccountNumber(_digits.SetItem(index, digit));
