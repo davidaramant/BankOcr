@@ -30,10 +30,6 @@ namespace BankOcr
 
     public static class SegmentsExtensions
     {
-        public static IEnumerable<Segments> GetAllOneOffs(this Segments input) =>
-            from bit in Enumerable.Range(0, 7)
-            select input ^ (Segments)(1 << bit);
-
         public static int? ToNumber(this Segments s)
         {
             switch (s)
@@ -52,5 +48,8 @@ namespace BankOcr
             }
         }
 
+        public static IEnumerable<Segments> GetAllOneOffs(this Segments input) =>
+            from bit in Enumerable.Range(0, 7)
+            select input ^ (Segments)(1 << bit);
     }
 }
