@@ -97,7 +97,7 @@ namespace Tests
             "490067715 AMB ['490067115', '490067719', '490867715']")]
         public void ShouldParseAccountNumber(string input, string result)
         {
-            Assert.That(AccountNumberParser.Parse(input), Is.EqualTo(result));
+            Assert.That(AccountNumber.Parse(input), Is.EqualTo(result));
         }
     }
 }

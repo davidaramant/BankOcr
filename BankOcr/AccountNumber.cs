@@ -6,12 +6,41 @@ namespace BankOcr
 {
     public sealed class AccountNumber
     {
+        public static string Parse(string input)
+        {
+            var accountNum = AccountNumber.FromString(input);
+
+            if (accountNum.IsValid())
+            {
+                return accountNum.ToString();
+            }
+
+            var allValidVariations = accountNum.GetAllValidVariations().ToArray();
+
+            switch (allValidVariations.Length)
+            {
+                case 0 when accountNum.ToString().Contains('?'):
+                    return $"{accountNum} ILL";
+
+                case 0:
+                    return $"{accountNum} ERR";
+
+                case 1:
+                    return allValidVariations.First().ToString();
+
+                default:
+                    var variations = string.Join(", ", allValidVariations.Select(ac => $"'{ac}'"));
+                    return $"{accountNum} AMB [{variations}]";
+            }
+        }
+
+
         private const int Length = 9;
         private readonly ImmutableArray<Segments> _digits;
 
         private AccountNumber(ImmutableArray<Segments> digits) { _digits = digits; }
 
-        public static AccountNumber Parse(string input) =>
+        private static AccountNumber FromString(string input) =>
             new AccountNumber(
                 Enumerable.Range(0, Length).
                 Select(position => GetSegmentsForPosition(input, position)).
@@ -23,17 +52,17 @@ namespace BankOcr
             var middleOffset = 3 * Length;
             var bottomOffset = 2 * middleOffset;
 
-            Segments GetFlag(Segments flag, int index) =>
+            Segments CheckSegment(Segments flag, int index) =>
                 input[index] == ' ' ? Segments.None : flag;
 
             return
-                GetFlag(Segments.TopBar, positionOffset + 1) |
-                GetFlag(Segments.MiddleLeftPipe, positionOffset + middleOffset) |
-                GetFlag(Segments.MiddleBar, positionOffset + middleOffset + 1) |
-                GetFlag(Segments.MiddleRightPipe, positionOffset + middleOffset + 2) |
-                GetFlag(Segments.BottomLeftPipe, positionOffset + bottomOffset) |
-                GetFlag(Segments.BottomBar, positionOffset + bottomOffset + 1) |
-                GetFlag(Segments.BottomRightPipe, positionOffset + bottomOffset + 2);
+                CheckSegment(Segments.TopBar, positionOffset + 1)
+                | CheckSegment(Segments.MiddleLeftPipe, positionOffset + middleOffset)
+                | CheckSegment(Segments.MiddleBar, positionOffset + middleOffset + 1)
+                | CheckSegment(Segments.MiddleRightPipe, positionOffset + middleOffset + 2)
+                | CheckSegment(Segments.BottomLeftPipe, positionOffset + bottomOffset)
+                | CheckSegment(Segments.BottomBar, positionOffset + bottomOffset + 1)
+                | CheckSegment(Segments.BottomRightPipe, positionOffset + bottomOffset + 2);
         }
 
         public bool IsValid() =>
