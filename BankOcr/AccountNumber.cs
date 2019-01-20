@@ -37,19 +37,18 @@ namespace BankOcr
         const int Length = 9;
         readonly ImmutableArray<Segments> _digits;
 
-        AccountNumber(ImmutableArray<Segments> digits) { _digits = digits; }
+        AccountNumber(ImmutableArray<Segments> digits) => _digits = digits;
 
         static AccountNumber Parse(string input) =>
             new AccountNumber(
-                Enumerable.Range(0, Length).
-                Select(position => GetSegmentsForPosition(input, position)).
-                ToImmutableArray());
+                (from position in Enumerable.Range(0, Length)
+                 select GetSegmentsForPosition(input, position)).ToImmutableArray());
 
         static Segments GetSegmentsForPosition(string input, int position)
         {
-            var positionOffset = position * 3;
-            var middleOffset = 3 * Length;
-            var bottomOffset = 2 * middleOffset;
+            int positionOffset = position * 3;
+            const int middleOffset = 3 * Length;
+            const int bottomOffset = 2 * middleOffset;
 
             Segments CheckSegment(int index, Segments flag) =>
                 input[index] == ' ' ? Segments.None : flag;
@@ -69,8 +68,8 @@ namespace BankOcr
             Aggregate((int?)0,
                 (sum, position) => sum + position * _digits[Length - position].ToNumber()) % 11 == 0;
 
-        AccountNumber WithDigitAtIndex(Segments digit, int index) =>
-            new AccountNumber(_digits.SetItem(index, digit));
+        public override string ToString() =>
+            new string(_digits.Select(d => d.ToChar()).ToArray());
 
         IEnumerable<AccountNumber> GetAllValidVariations() =>
             from index in Enumerable.Range(0, Length)
@@ -80,7 +79,7 @@ namespace BankOcr
             orderby accountVariation.ToString()
             select accountVariation;
 
-        public override string ToString() =>
-            new string(_digits.Select(d => d.ToChar()).ToArray());
+        AccountNumber WithDigitAtIndex(Segments digit, int index) =>
+            new AccountNumber(_digits.SetItem(index, digit));
     }
 }
